@@ -1,17 +1,13 @@
 /* eslint-disable linebreak-style */
 import React from 'react';
-import {
-  ApolloClient,
-  ApolloProvider,
-  InMemoryCache,
-} from '@apollo/client';
-import { ToastContainer } from 'react-toastify';
+import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client';
 import { MuiThemeProvider, createTheme } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import 'react-toastify/dist/ReactToastify.css';
-import Header from './components/Header';
+import { ToastContainer } from 'react-toastify';
 import Wrapper from './components/Wrapper';
 import Metrics from './components/Metrics';
+import Header from './components/Header';
 
 const client = new ApolloClient({
   uri: 'https://react.eogresources.com/graphql',
@@ -39,7 +35,7 @@ const App = () => (
       {/* <NowWhat /> */}
       <ApolloProvider client={client}>
         <Metrics />
-      </ApolloProvider>
+      </ApolloProvider>{' '}
       <ToastContainer />
     </Wrapper>
   </MuiThemeProvider>

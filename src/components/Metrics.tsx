@@ -1,48 +1,47 @@
 /* eslint-disable linebreak-style */
 import * as React from 'react';
-import {
-  useQuery,
-  gql,
-} from '@apollo/client';
+import { useQuery, gql } from '@apollo/client';
 import { makeStyles } from '@material-ui/core/styles';
 import Select from 'react-select';
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
 
 const useStyles = makeStyles({
   wrapper: {
     height: '100vh',
+    padding: '50px',
+    background: 'white',
+  },
+  selectWrapper: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    width: '100%',
+  },
+  selectBox: {
+    width: '600px',
+  },
+  chartWrapper: {
+    marginTop: '50px',
+    width: '100%',
   },
 });
-
-const query = gql`
-query ($input: [MeasurementQuery]) {
-  getMultipleMeasurements(input: $input) {
-    metric
-    measurements {
-      at
-      value
+const queryForMultipleMeasurements = gql`
+  query ($input: [MeasurementQuery]) {
+    getMultipleMeasurements(input: $input) {
       metric
-      unit
+      measurements {
+        at
+        value
+        metric
+        unit
+        __typename
+      }
       __typename
     }
     __typename
   }
-  __typename
-}
 `;
-/*
-{"query":"query ($input: [MeasurementQuery])
-{\n  getMultipleMeasurements(input: $input) {\n    metric\n
-  measurements {\n      at\n      value\n      metric\n      unit\n
-   __typename\n    }\n    __typename\n  }\n  __typename\n}\n",
-   "variables":{"input":[{"metricName":"oilTemp","after":1637671322946}]}}
-
-{"variables":{"latLong":{"latitude":29.7604,"longitude":-95.3698}},
-"query":"query ($latLong: WeatherQuery!)
-{\n  getWeatherForLocation(latLong: $latLong)
-   {\n    description\n    locationName\n    temperatureinCelsius\n
-      __typename\n  }\n}"} */
-
-type WeatherDataResponse = {
+type MetricMeasurementDataResponse = {
   getMultipleMeasurements: any;
 };
 
@@ -60,27 +59,57 @@ const Metrics: React.FC = () => {
     { label: 'casingPressure', value: 'casingPressure' },
   ];
 
-  // if (state.metricNames.length > 0) {
-  const { loading, error, data } = useQuery<WeatherDataResponse>(query, {
+  const { data } = useQuery<MetricMeasurementDataResponse>(queryForMultipleMeasurements, {
     variables: {
       input: state.metricNames,
     },
   });
-  console.log(loading, error, data);
-  // }
 
+  const measurements = data?.getMultipleMeasurements;
+  const graphData = measurements?.length > 0
+    && measurements.map((item: any) => ({
+      name: item.metric,
+      data: item.measurements.map((val: any) => [val.at, val.value]),
+    }));
+  const optionsHighChart = {
+    time: {
+      useUTC: false,
+    },
+    xAxis: {
+      type: 'datetime',
+      labels: {
+        format: '{value:%H:%M}',
+      },
+    },
+    exporting: {
+      enabled: false,
+    },
+    series: graphData,
+  };
+  let timeNow = new Date();
+  timeNow.setMinutes(timeNow.getMinutes() - 30); // timestamp
+  timeNow = new Date(timeNow); // Date object
   return (
-    <div className={classes.wrapper}><Select
-      options={options}
-      isMulti
-      onChange={(item: any) => {
-        const metricNames = item.map((option: any) => ({
-          metricName: option.value,
-          after: 1637671322946,
-        }));
-        setState({ metricNames });
-      }}
-    />
+    <div className={classes.wrapper}>
+      <div className={classes.selectWrapper}>
+        <Select
+          options={options}
+          isMulti
+          className={classes.selectBox}
+          onChange={(item: any) => {
+            const metricNames = item.map((option: any) => ({
+              metricName: option.value,
+              after: timeNow.getTime(),
+            }));
+            setState({ metricNames });
+          }}
+        />
+      </div>
+      {graphData.length > 0 && (
+        <div className={classes.chartWrapper}>
+          <HighchartsReact highcharts={Highcharts} options={optionsHighChart} />
+        </div>
+      )}
     </div>
   );
 };
