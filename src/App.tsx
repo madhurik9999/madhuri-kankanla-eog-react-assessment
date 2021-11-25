@@ -9,6 +9,9 @@ import Wrapper from './components/Wrapper';
 import Metrics from './components/Metrics';
 import Header from './components/Header';
 
+/**
+   Used ApolloClient to connect to GraphQL data source and execute GraphQL Operations
+   */
 const client = new ApolloClient({
   uri: 'https://react.eogresources.com/graphql',
   cache: new InMemoryCache(),
